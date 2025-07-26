@@ -182,4 +182,258 @@ export default function HuntrMVP() {
             {tokens.map((token, index) => (
               <Card
                 key={token.id}
-                className="bg-gray-900/50
+                className="bg-gray-900/50 border-gray-800 hover:border-gray-700 cursor-pointer transition-all duration-200 hover:bg-gray-900/70"
+                onClick={() => setSelectedToken(token)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold text-gray-500">#{index + 1}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg">${token.symbol}</h3>
+                            {token.isSpikingNow && (
+                              <Badge className="bg-red-500/20 text-red-400 border-red-500/30 animate-pulse">
+                                <Zap className="w-3 h-3 mr-1" />
+                                Spiking
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-400">{token.name}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                      <div className="text-center">
+                        <div className={`text-2xl font-bold ${getScoreColor(token.score)}`}>{token.score}</div>
+                        <div className="text-xs text-gray-400">Score</div>
+                      </div>
+
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-blue-400">{formatLiquidity(token.liquidity)}</div>
+                        <div className="text-xs text-gray-400">Liquidity</div>
+                      </div>
+
+                      <div className="text-center">
+                        <div className="text-lg font-semibold text-green-400">{formatPrice(token.price)} ETH</div>
+                        <div className="text-xs text-gray-400">Price</div>
+                      </div>
+
+                      <div className="text-center">
+                        <div className="flex items-center gap-1 text-gray-300">
+                          <Clock className="w-4 h-4" />
+                          <span className="font-semibold">{token.age}</span>
+                        </div>
+                        <div className="text-xs text-gray-400">Age</div>
+                      </div>
+
+                      <Badge className={getScoreBadgeColor(token.score)}>
+                        {token.score >= 25 ? "High" : token.score >= 15 ? "Medium" : "Low"}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Token Detail Modal */}
+      <Dialog open={!!selectedToken} onOpenChange={() => setSelectedToken(null)}>
+        <DialogContent className="max-w-4xl bg-gray-900 border-gray-800 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">${selectedToken?.symbol}</span>
+                  {selectedToken?.isSpikingNow && (
+                    <Badge className="bg-red-500/20 text-red-400 border-red-500/30 animate-pulse">
+                      <Zap className="w-3 h-3 mr-1" />
+                      Spiking
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-400 font-normal">{selectedToken?.name}</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedToken && (
+            <div className="space-y-6">
+              {/* Key Metrics */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-4 text-center">
+                    <div className={`text-2xl font-bold ${getScoreColor(selectedToken.score)}`}>
+                      {selectedToken.score}
+                    </div>
+                    <div className="text-sm text-gray-400">Huntr Score</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-xl font-bold text-blue-400">{formatPrice(selectedToken.price)} ETH</div>
+                    <div className="text-sm text-gray-400">Current Price</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-xl font-bold text-green-400">{formatLiquidity(selectedToken.liquidity)}</div>
+                    <div className="text-sm text-gray-400">Liquidity</div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-xl font-bold text-purple-400">{selectedToken.age}</div>
+                    <div className="text-sm text-gray-400">Pool Age</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Charts */}
+              <Tabs defaultValue="price" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-gray-800">
+                  <TabsTrigger value="price" className="data-[state=active]:bg-gray-700">
+                    Price Chart
+                  </TabsTrigger>
+                  <TabsTrigger value="liquidity" className="data-[state=active]:bg-gray-700">
+                    Liquidity Chart
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="price" className="space-y-4">
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Price Movement (Last 30 minutes)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <AreaChart data={generateMockChartData(selectedToken.price)}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                          <XAxis dataKey="time" stroke="#9CA3AF" />
+                          <YAxis stroke="#9CA3AF" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "#1F2937",
+                              border: "1px solid #374151",
+                              borderRadius: "8px",
+                            }}
+                          />
+                          <Area type="monotone" dataKey="price" stroke="#10B981" fill="#10B981" fillOpacity={0.2} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="liquidity" className="space-y-4">
+                  <Card className="bg-gray-800/50 border-gray-700">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Liquidity Growth (Last 30 minutes)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ResponsiveContainer width="100%" height={200}>
+                        <LineChart data={generateMockChartData(selectedToken.price)}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                          <XAxis dataKey="time" stroke="#9CA3AF" />
+                          <YAxis stroke="#9CA3AF" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "#1F2937",
+                              border: "1px solid #374151",
+                              borderRadius: "8px",
+                            }}
+                          />
+                          <Line type="monotone" dataKey="liquidity" stroke="#3B82F6" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+
+              {/* Token Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Activity className="w-4 h-4" />
+                      Token Details
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Contract:</span>
+                      <span className="font-mono text-sm">{selectedToken.address.slice(0, 10)}...</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Pool:</span>
+                      <span className="font-mono text-sm">{selectedToken.poolAddress.slice(0, 10)}...</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Market Cap:</span>
+                      <span>{formatLiquidity(selectedToken.marketCap)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Detected:</span>
+                      <span>{new Date(selectedToken.detectedAt).toLocaleTimeString()}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardHeader>
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <DollarSign className="w-4 h-4" />
+                      Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Score:</span>
+                      <span className={`font-semibold ${getScoreColor(selectedToken.score)}`}>
+                        {selectedToken.score}/30
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Price Change:</span>
+                      <span className="text-green-400 font-semibold">+{selectedToken.priceChange.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">24h Volume:</span>
+                      <span>{formatLiquidity(selectedToken.volume24h)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Age:</span>
+                      <span>{selectedToken.age}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  onClick={() => window.open(getUniswapTradeUrl(selectedToken.address), "_blank")}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Trade on Uniswap
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-gray-600 hover:border-gray-500 bg-transparent"
+                  onClick={() => window.open(`https://basescan.org/token/${selectedToken.address}`, "_blank")}
+                >
+                  <Activity className="w-4 h-4 mr-2" />
+                  View on BaseScan
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
